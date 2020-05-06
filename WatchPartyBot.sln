@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchPartyBot", "WatchPartyBot.csproj", "{B2315E17-777B-4E75-8026-37843CCB567D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B2315E17-777B-4E75-8026-37843CCB567D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2315E17-777B-4E75-8026-37843CCB567D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2315E17-777B-4E75-8026-37843CCB567D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2315E17-777B-4E75-8026-37843CCB567D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA44140F-BDEA-4250-9C66-782E3501480C}
+	EndGlobalSection
+EndGlobal
