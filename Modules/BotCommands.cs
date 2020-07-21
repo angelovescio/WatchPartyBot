@@ -1,20 +1,44 @@
 ﻿using CSCore;
+using CSCore.CoreAudioAPI;
 using CSCore.SoundIn;
 using CSCore.Streams;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace WatchPartyBot.Modules
 {
+
+
     // for commands to be available, and have the Context passed to them, we must inherit ModuleBase
     public class BotCommands : ModuleBase
     {
+        public struct RoleIdName
+        {
+            public ulong Id;
+            public string Role;
+            public RoleIdName(ulong id, string role)
+            {
+                Id = id;
+                Role = role;
+            }
+        }
+        //RoleId List
+        static readonly List<RoleIdName> RoleIDs = new List<RoleIdName>() {
+            new RoleIdName(111,"ExploitDev"),
+            new RoleIdName(222,"CTFTime"),
+            new RoleIdName(333,"Cyber101")
+        };
+
         // The following example only requires the user to either have the
         // Administrator permission in this guild or own the bot application.
-        [RequireUserPermission(GuildPermission.Administrator, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
         [Summary("Joins a bot to the voice channel specified and replays desktop audio")]
         [Command("partytime", RunMode = RunMode.Async)]
@@ -84,6 +108,78 @@ namespace WatchPartyBot.Modules
                     Console.ReadKey();
                     soundIn.Stop();
                 }
+            }
+        }
+        //scan initial users
+        //every hour, grab log entries from starttime to endtime now()
+        /*
+         * grab all users from each talk's waiting room (needs the ability to only allow ONE waiting room)
+         * check for last update
+         * if last update is one of the oldest 500
+         */
+        //
+        //allow user to change roles to a new waitlist role, removes all others
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Opens the room for a specific talk")]
+        [Command("openroom", RunMode = RunMode.Async)]
+        [Alias("starttalk", "jointalk")]
+        public async Task GoToWaitingRoomCommand(
+            [Summary("Room to wait in [ExploitDev, CTFIntro, 101]")]
+            string userRoom = null)
+        {
+            //get ID for current user
+            var userId = Context.User.Id;
+            //get user object from ID
+            var user = await Context.Guild.GetUserAsync(userId);
+            //enumerate all roles current user has
+            foreach(ulong id in user.RoleIds)
+            {
+                if(RoleIDs.Any(e => (e.Id == id)))
+                {
+                    IRole rId = Context.Guild.GetRole(id);
+                    await user.RemoveRoleAsync(rId);
+                }
+            }
+            //check if role requested is one of the ones allowed
+            if (RoleIDs.Any(e => e.Role.Contains(userRoom,StringComparison.InvariantCultureIgnoreCase)))
+            {
+                IRole rId = Context.Guild.GetRole(RoleIDs.Find(f => f.Role.Contains(userRoom, StringComparison.InvariantCultureIgnoreCase)).Id);
+                await user.RemoveRoleAsync(rId);
+            }
+        }
+        //listen for new users entering
+        //queueUsers(talk)
+        //enum allowed roles
+        //move members(role of members to move)
+        /*
+         * If a member is in a waitroom AND one of the eldest 500, move them to the main talk room
+         */
+        //add role(channel role)
+        //remove role(channel role)
+        //closeRoom(name of room)
+        //openRoom(name of room)
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Opens the room for a specific talk")]
+        [Command("openroom", RunMode = RunMode.Async)]
+        [Alias("starttalk", "jointalk")]
+        public async Task OpenRoomCommand(
+            [Summary("Room to open")]
+            IRole userRole = null)
+        {
+            List<IUser> users = new List<IUser>();
+            foreach(IUser user in await Context.Guild.GetUsersAsync())
+            {
+                if(users.Count > 1)
+                {
+                    //get time user came into the server
+                }
+                users.Append(user);
             }
         }
     }
