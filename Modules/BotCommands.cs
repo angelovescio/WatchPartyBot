@@ -5,6 +5,7 @@ using CSCore.Streams;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
+using Discord.Rest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,18 +41,12 @@ namespace WatchPartyBot.Modules
             //get user object from ID
             var user = await Context.Guild.GetUserAsync(userId);
             //enumerate all roles current user has
-            foreach(ulong id in user.RoleIds)
-            {
-                if(Program.RoleIDs.Any(e => (e.Id == id)))
-                {
-                    IRole rId = Context.Guild.GetRole(id);
-                    await user.RemoveRoleAsync(rId);
-                }
-            }
+            IEnumerable<IRole> iRoles = Context.Guild.Roles.Where(e => (Program.WaitlistRoleIDs.Contains(e.Name)));
+            await user.RemoveRolesAsync(iRoles);
             //check if role requested is one of the ones allowed
-            if (Program.RoleIDs.Any(e => e.Role.Contains(userRoom,StringComparison.InvariantCultureIgnoreCase)))
+            if (Program.WaitlistRoleIDs.Any(e => e.Contains(userRoom,StringComparison.InvariantCultureIgnoreCase)))
             {
-                IRole rId = Context.Guild.GetRole(Program.RoleIDs.Where(f => f.Role.Contains(userRoom, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault().Id);
+                IRole rId = iRoles.FirstOrDefault(f => f.Name.Contains(userRoom, StringComparison.InvariantCultureIgnoreCase));
                 if (rId != null)
                 {
                     await user.AddRoleAsync(rId);
@@ -63,11 +58,138 @@ namespace WatchPartyBot.Modules
         [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
         [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
+        [Summary("Move the up to 500 users to their talks")]
+        [Command("movetheherd", RunMode = RunMode.Async)]
+        [Alias("move", "moo")]
+        public async Task StartSessionTalkCommand()
+        {
+            //get users with the right roles
+            //find the time they set their role
+            //move them to a room
+        }
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Kick the up to 500 users from their talks")]
+        [Command("boottheherd", RunMode = RunMode.Async)]
+        [Alias("boot", "end")]
+        public async Task EndSessionTalkCommand()
+        {
+            //get users with the right roles
+            var users = await Context.Guild.GetUsersAsync();
+            var chans = await Context.Guild.GetChannelsAsync();
+            var defaultrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "@everyone");
+            var defaultperms = new OverwritePermissions(
+                sendMessages: PermValue.Deny,
+                addReactions: PermValue.Deny,
+                viewChannel: PermValue.Deny
+            );
+            var botrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "RodsFromGod");
+            var botperms = new OverwritePermissions(
+                sendMessages: PermValue.Allow,
+                addReactions: PermValue.Allow,
+                viewChannel: PermValue.Allow,
+                manageChannel: PermValue.Allow
+            );
+            //Strip their roles
+            foreach (var user in users)
+            {
+                IEnumerable<IRole> iRoles = Context.Guild.Roles.Where(e => e.Name == Program.RoleIDs.FirstOrDefault(f => e.Name.Contains(f,StringComparison.InvariantCultureIgnoreCase)));
+                await user.RemoveRolesAsync(iRoles);
+            }
+            IEnumerable<IGuildChannel> iChans = chans.Where(e => (Program.ChannelIDs.Contains(e.Name)));
+
+            foreach (var room in iChans)
+            {
+                await room.DeleteAsync();
+            }
+
+            IGuildChannel cExploitDev = chans.Where(e => e.Name.Contains("ExploitDev",
+               StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            IGuildChannel cCTFIntro = chans.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            IGuildChannel cCyber101 = chans.Where(e => e.Name.Contains("Cyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+            if (cExploitDev == null)
+            {
+                //create the channels
+                ITextChannel tExploitDev = await Context.Guild.CreateTextChannelAsync("ExploitDev");
+                if (tExploitDev != null)
+                {
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "ExploitDev");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tExploitDev.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tExploitDev.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tExploitDev.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tExploitDev);
+                }
+            }
+            if (cCTFIntro == null)
+            {
+                ITextChannel tCTFIntro = await Context.Guild.CreateTextChannelAsync("CTFIntro");
+                if (tCTFIntro != null)
+                {
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "CTFIntro");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tCTFIntro.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tCTFIntro.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tCTFIntro.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tCTFIntro);
+                }
+            }
+            if (cCyber101 == null)
+            {
+                ITextChannel tCyber101 = await Context.Guild.CreateTextChannelAsync("Cyber101");
+                if (tCyber101 != null)
+                {
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "Cyber101");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tCyber101.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tCyber101.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tCyber101.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tCyber101);
+                }
+            }
+            //await SetupRolesRoomsCommand();
+            //Clear the room
+        }
+        //set up the roles
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
         [Summary("Set up initial roles and rooms wait in [ExploitDev, CTFIntro, Cyber101]")]
         [Command("setuproom", RunMode = RunMode.Async)]
         [Alias("initialize", "setup")]
         public async Task SetupRolesRoomsCommand()
         {
+            var defaultrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "@everyone");
+            var defaultperms = new OverwritePermissions(
+                sendMessages: PermValue.Deny,
+                addReactions: PermValue.Deny,
+                viewChannel: PermValue.Deny
+            );
+            var botrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "RodsFromGod");
+            var botperms = new OverwritePermissions(
+                sendMessages: PermValue.Allow,
+                addReactions: PermValue.Allow,
+                viewChannel: PermValue.Allow,
+                manageChannel: PermValue.Allow
+            );
             var chans = await Context.Guild.GetChannelsAsync();
             IGuildChannel cExploitDev = chans.Where(e => e.Name.Contains("ExploitDev",
                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -82,7 +204,24 @@ namespace WatchPartyBot.Modules
                 ITextChannel tExploitDev = await Context.Guild.CreateTextChannelAsync("ExploitDev");
                 if (tExploitDev != null)
                 {
-                    Program.ChannelIDs.Add(new RoleIdName(tExploitDev.Id, tExploitDev.Name));
+                    //create the roles
+                    IRole rTryExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("ExploitDev",
+                        StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    if (rTryExploitDev == null)
+                    {
+                        IRole rExploitDev = await Context.Guild.CreateRoleAsync(name: "ExploitDev", color: Color.Teal, isMentionable: false);
+                        
+                    }
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "ExploitDev");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tExploitDev.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tExploitDev.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tExploitDev.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tExploitDev);
                 }
             }
             if (cCTFIntro == null)
@@ -90,7 +229,23 @@ namespace WatchPartyBot.Modules
                 ITextChannel tCTFIntro = await Context.Guild.CreateTextChannelAsync("CTFIntro");
                 if (tCTFIntro != null)
                 {
-                    Program.ChannelIDs.Add(new RoleIdName(tCTFIntro.Id, tCTFIntro.Name));
+                    IRole rTryCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    if (rTryCTFIntro == null)
+                    {
+                        IRole rCTFIntro = await Context.Guild.CreateRoleAsync(name: "CTFIntro", color: Color.Purple, isMentionable: false);
+                        
+                    }
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "CTFIntro");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tCTFIntro.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tCTFIntro.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tCTFIntro.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tCTFIntro);
                 }
             }
             if (cCyber101 == null)
@@ -98,40 +253,45 @@ namespace WatchPartyBot.Modules
                 ITextChannel tCyber101 = await Context.Guild.CreateTextChannelAsync("Cyber101");
                 if (tCyber101 != null)
                 {
-                    Program.ChannelIDs.Add(new RoleIdName(tCyber101.Id, tCyber101.Name));
+                    IRole rTryCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("Cyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    if (rTryCyber101 == null)
+                    {
+                        IRole rCyber101 = await Context.Guild.CreateRoleAsync(name: "Cyber101", color: Color.DarkMagenta, isMentionable: false);
+                        
+                    }
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == "Cyber101");
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await tCyber101.AddPermissionOverwriteAsync(botrole, botperms);
+                    await tCyber101.AddPermissionOverwriteAsync(defaultrole, defaultperms);
+                    await tCyber101.AddPermissionOverwriteAsync(role, perms);
+                    //Program.ChannelIDs.Add(tCyber101);
                 }
             }
-
-            //create the roles
-            IRole rTryExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("ExploitDev",
+            IRole rTryWaitExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("WaitExploitDev",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            if (rTryExploitDev == null)
+            if (rTryWaitExploitDev == null)
             {
-                IRole rExploitDev = await Context.Guild.CreateRoleAsync(name: "ExploitDev", color: Color.Teal, isMentionable: false);
-                if (rExploitDev != null)
-                {
-                    Program.RoleIDs.Add(new RoleIdName(rExploitDev.Id, rExploitDev.Name));
-                }
+                IRole rExploitDev = await Context.Guild.CreateRoleAsync(name: "WaitExploitDev", color: Color.Teal, isMentionable: false);
+                
             }
-            IRole rTryCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("CTFIntro",
+            IRole rTryWaitCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCTFIntro",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            if (rTryCTFIntro == null)
+            if (rTryWaitCTFIntro == null)
             {
-                IRole rCTFIntro = await Context.Guild.CreateRoleAsync(name: "CTFIntro", color: Color.Purple, isMentionable: false);
-                if (rCTFIntro != null)
-                {
-                    Program.RoleIDs.Add(new RoleIdName(rCTFIntro.Id, rCTFIntro.Name));
-                }
+                IRole rCTFIntro = await Context.Guild.CreateRoleAsync(name: "WaitCTFIntro", color: Color.Purple, isMentionable: false);
+                
             }
-            IRole rTryCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("Cyber101",
+            IRole rTryWaitCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCyber101",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            if (rTryCyber101 == null)
+            if (rTryWaitCyber101 == null)
             {
-                IRole rCyber101 = await Context.Guild.CreateRoleAsync(name: "Cyber101", color: Color.DarkMagenta, isMentionable: false);
-                if (rCyber101 != null)
-                {
-                    Program.RoleIDs.Add(new RoleIdName(rCyber101.Id, rCyber101.Name));
-                }
+                IRole rCyber101 = await Context.Guild.CreateRoleAsync(name: "WaitCyber101", color: Color.DarkMagenta, isMentionable: false);
+                
             }
         }
         //tear it all down
@@ -166,7 +326,29 @@ namespace WatchPartyBot.Modules
                 IRole rCyber101 = Context.Guild.GetRole(rTryCyber101.Id);
                 await rCyber101.DeleteAsync();
             }
-            
+
+            IRole rTryWaitExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("WaitExploitDev",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitExploitDev != null)
+            {
+                IRole rExploitDev = Context.Guild.GetRole(rTryWaitExploitDev.Id);
+                await rExploitDev.DeleteAsync();
+            }
+            IRole rTryWaitCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitCTFIntro != null)
+            {
+                IRole rCTFIntro = Context.Guild.GetRole(rTryWaitCTFIntro.Id);
+                await rCTFIntro.DeleteAsync();
+            }
+            IRole rTryWaitCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitCyber101 != null)
+            {
+                IRole rCyber101 = Context.Guild.GetRole(rTryWaitCyber101.Id);
+                await rCyber101.DeleteAsync();
+            }
+
             var chans = await Context.Guild.GetChannelsAsync();
             IGuildChannel cExploitDev =  chans.Where(e => e.Name.Contains("ExploitDev",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -174,7 +356,7 @@ namespace WatchPartyBot.Modules
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
             IGuildChannel cCyber101 = chans.Where(e => e.Name.Contains("Cyber101",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
+            
             if (cExploitDev != null)
             {
                 await cExploitDev.DeleteAsync();
@@ -187,8 +369,6 @@ namespace WatchPartyBot.Modules
             {
                 await cCyber101.DeleteAsync();
             }
-            Program.RoleIDs = new HashSet<RoleIdName>();
-            Program.ChannelIDs = new HashSet<RoleIdName>();
         }
 
         //listen for new users entering
@@ -213,14 +393,134 @@ namespace WatchPartyBot.Modules
             [Summary("Room to open")]
             IRole userRole = null)
         {
-            List<IUser> users = new List<IUser>();
-            foreach(IUser user in await Context.Guild.GetUsersAsync())
+            List<IAuditLogEntry> ctfintro = new List<IAuditLogEntry>(500);
+            List<IAuditLogEntry> cyber101 = new List<IAuditLogEntry>(500);
+            List<IAuditLogEntry> exploitdev = new List<IAuditLogEntry>(500);
+
+            IRole rTryExploitDev = null;
+            IRole rExploitDev = null;
+            IRole rTryCTFIntro = null;
+            IRole rCTFIntro = null;
+            IRole rTryCyber101 = null;
+            IRole rCyber101 = null;
+            IRole rTryWaitExploitDev = null;
+            IRole rWaitExploitDev = null;
+            IRole rTryWaitCTFIntro = null;
+            IRole rWaitCTFIntro = null;
+            IRole rTryWaitCyber101 = null;
+            IRole rWaitCyber101 = null;
+            //get all waitlisted ctfintro
+            //if user has role ...
+            //
+            //get all waitlisted cyber101
+            //get all waitlisted exploitdev
+
+            IEnumerable<IAuditLogEntry> logs = await Context.Guild.GetAuditLogsAsync(limit: 10000);
+            foreach(var log in logs)
             {
-                if(users.Count > 1)
+                if(log.CreatedAt.DateTime < DateTime.Now.Subtract(new TimeSpan(1,0,0,0)))
                 {
-                    //get time user came into the server
+                    break;
                 }
-                users.Add(user);
+                if(log.Action == ActionType.MemberRoleUpdated)
+                {
+                    IAuditLogData data = log.Data;
+                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = log.Data as Discord.Rest.MemberRoleAuditLogData;
+                    if (memberRoleAuditLogData.Roles.Any(e => e.Name.Contains("WaitCyber101", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        cyber101.Add(log); 
+                    }
+                    if (memberRoleAuditLogData.Roles.Any(e => e.Name.Contains("WaitCTFIntro", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        ctfintro.Add(log);
+                    }
+                    if (memberRoleAuditLogData.Roles.Any(e => e.Name.Contains("WaitExploitDev", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        exploitdev.Add(log);
+                    }
+                }
+            }
+            ctfintro.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+            exploitdev.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+            cyber101.Sort((a, b) => a.CreatedAt.CompareTo(b.CreatedAt));
+            
+            rTryExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("ExploitDev",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryExploitDev != null)
+            {
+                rExploitDev = Context.Guild.GetRole(rTryExploitDev.Id);
+                
+            }
+            rTryCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryCTFIntro != null)
+            {
+                rCTFIntro = Context.Guild.GetRole(rTryCTFIntro.Id);
+                
+            }
+            rTryCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("Cyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryCyber101 != null)
+            {
+                rCyber101 = Context.Guild.GetRole(rTryCyber101.Id);
+                
+            }
+            rTryWaitExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("WaitExploitDev",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitExploitDev != null)
+            {
+                rWaitExploitDev = Context.Guild.GetRole(rTryWaitExploitDev.Id);
+                
+            }
+            rTryWaitCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitCTFIntro != null)
+            {
+                rWaitCTFIntro = Context.Guild.GetRole(rTryWaitCTFIntro.Id);
+                
+            }
+            rTryWaitCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("WaitCyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryWaitCyber101 != null)
+            {
+                rWaitCyber101 = Context.Guild.GetRole(rTryWaitCyber101.Id);
+                
+            }
+            foreach (var entry in ctfintro)
+            {
+                IGuildUser user = entry.User as IGuildUser;
+                if (user.RoleIds.Any(e => e == rWaitCTFIntro.Id))
+                {
+                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                    MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
+                    IRole role = Context.Guild.GetRole(mi.RoleId);
+                    await user.RemoveRoleAsync(role);
+                    await user.AddRoleAsync(rCTFIntro);
+                }
+            }
+            foreach (var entry in cyber101)
+            {
+                IGuildUser user = entry.User as IGuildUser;
+                if (user.RoleIds.Any(e => e == rWaitCyber101.Id))
+                {
+                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                    MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
+                    IRole role = Context.Guild.GetRole(mi.RoleId);
+                    await user.RemoveRoleAsync(role);
+                    await user.AddRoleAsync(rCyber101);
+                }
+            }
+            foreach (var entry in exploitdev)
+            {
+                IGuildUser user = entry.User as IGuildUser;
+                if (user.RoleIds.Any(e => e == rWaitExploitDev.Id))
+                {
+                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                    MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
+                    IRole role = Context.Guild.GetRole(mi.RoleId);
+                    await user.RemoveRoleAsync(role);
+                    await user.AddRoleAsync(rExploitDev);
+                }
             }
         }
     }

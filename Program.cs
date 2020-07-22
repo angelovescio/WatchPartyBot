@@ -33,10 +33,11 @@ namespace WatchPartyBot
         // setup our fields we assign later
         private readonly IConfiguration _config;
         private DiscordSocketClient _client;
-        
+
         //RoleId List
-        public static HashSet<RoleIdName> RoleIDs = new HashSet<RoleIdName>();
-        public static HashSet<RoleIdName> ChannelIDs = new HashSet<RoleIdName>();
+        public static HashSet<string> RoleIDs = new HashSet<string>() { "CTFIntro","Cyber101","ExploitDev"};
+        public static HashSet<string> WaitlistRoleIDs = new HashSet<string>() { "WaitCTFIntro", "WaitCyber101", "WaitExploitDev" };
+        public static HashSet<string> ChannelIDs = new HashSet<string>() { "CTFIntro", "Cyber101", "ExploitDev" };
         static void Main(string[] args)
         {
             new Program().MainAsync().GetAwaiter().GetResult();
@@ -96,32 +97,7 @@ namespace WatchPartyBot
             IRole rCyber101 = roles.Where(e => e.Name.Contains("Cyber101",
                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
-            if (cExploitDev != null)
-            {
-                Program.ChannelIDs.Add(new RoleIdName(cExploitDev.Id, cExploitDev.Name));
-            }
-            if (cCTFIntro != null)
-            {
-                Program.ChannelIDs.Add(new RoleIdName(cCTFIntro.Id, cCTFIntro.Name));
-            }
-            if (cCyber101 != null)
-            {
-                Program.ChannelIDs.Add(new RoleIdName(cCyber101.Id, cCyber101.Name));
-            }
-
-            //create the roles
-            if (rExploitDev != null)
-            {
-                Program.RoleIDs.Add(new RoleIdName(rExploitDev.Id, rExploitDev.Name));
-            }
-            if (rCTFIntro != null)
-            {
-                Program.RoleIDs.Add(new RoleIdName(rCTFIntro.Id, rCTFIntro.Name));
-            }
-            if (rCyber101 != null)
-            {
-                Program.RoleIDs.Add(new RoleIdName(rCyber101.Id, rCyber101.Name));
-            }
+            
         }
         private Task LogAsync(LogMessage log)
         {
