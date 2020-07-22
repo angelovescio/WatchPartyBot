@@ -150,6 +150,82 @@ namespace WatchPartyBot.Modules
                 await user.RemoveRoleAsync(rId);
             }
         }
+        //set up the roles
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Set up initial roles and rooms wait in [ExploitDev, CTFIntro, Cyber101]")]
+        [Command("setuproom", RunMode = RunMode.Async)]
+        [Alias("initialize", "setup")]
+        public async Task SetupRolesRoomsCommand()
+        {
+            //create the channels
+            await Context.Guild.CreateTextChannelAsync("ExploitDev");
+            await Context.Guild.CreateTextChannelAsync("CTFIntro");
+            await Context.Guild.CreateTextChannelAsync("Cyber101");
+
+            //create the roles
+            await Context.Guild.CreateRoleAsync(name: "ExploitDev", color: Color.Teal, isMentionable: false);
+            await Context.Guild.CreateRoleAsync(name: "CTFIntro", color: Color.Purple, isMentionable: false);
+            await Context.Guild.CreateRoleAsync(name: "Cyber101", color: Color.DarkMagenta, isMentionable: false);
+
+        }
+        //tear it all down
+        //delete the roles and rooms
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Remove initial roles and rooms wait in [ExploitDev, CTFIntro, Cyber101]")]
+        [Command("teardown", RunMode = RunMode.Async)]
+        [Alias("dispose", "deleteall")]
+        public async Task RemoveRolesRoomsCommand()
+        {
+            IRole rTryExploitDev = Context.Guild.Roles.Where(e => e.Name.Contains("ExploitDev",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryExploitDev != null)
+            {
+                IRole rExploitDev = Context.Guild.GetRole(rTryExploitDev.Id);
+                await rExploitDev.DeleteAsync();
+            }
+            IRole rTryCTFIntro = Context.Guild.Roles.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryCTFIntro != null)
+            {
+                IRole rCTFIntro = Context.Guild.GetRole(rTryCTFIntro.Id);
+                await rCTFIntro.DeleteAsync();
+            }
+            IRole rTryCyber101 = Context.Guild.Roles.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (rTryCyber101 != null)
+            {
+                IRole rCyber101 = Context.Guild.GetRole(rTryCyber101.Id);
+                await rCyber101.DeleteAsync();
+            }
+            
+            var chans = await Context.Guild.GetChannelsAsync();
+            IGuildChannel cExploitDev =  chans.Where(e => e.Name.Contains("ExploitDev",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            IGuildChannel cCTFIntro = chans.Where(e => e.Name.Contains("CTFIntro",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            IGuildChannel cCyber101 = chans.Where(e => e.Name.Contains("Cyber101",
+                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+            if (cExploitDev != null)
+            {
+                await cExploitDev.DeleteAsync();
+            }
+            if (cCTFIntro != null)
+            {
+                await cCTFIntro.DeleteAsync();
+            }
+            if (cCyber101 != null)
+            {
+                await cCyber101.DeleteAsync();
+            }
+        }
+
         //listen for new users entering
         //queueUsers(talk)
         //enum allowed roles
