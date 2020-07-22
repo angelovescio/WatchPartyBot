@@ -488,10 +488,10 @@ namespace WatchPartyBot.Modules
             }
             foreach (var entry in ctfintro)
             {
-                IGuildUser user = entry.User as IGuildUser;
+                Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                IGuildUser user = await Context.Guild.GetUserAsync(memberRoleAuditLogData.Target.Id);
                 if (user.RoleIds.Any(e => e == rWaitCTFIntro.Id))
                 {
-                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
                     MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
                     IRole role = Context.Guild.GetRole(mi.RoleId);
                     await user.RemoveRoleAsync(role);
@@ -500,10 +500,10 @@ namespace WatchPartyBot.Modules
             }
             foreach (var entry in cyber101)
             {
-                IGuildUser user = entry.User as IGuildUser;
+                Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                IGuildUser user = await Context.Guild.GetUserAsync(memberRoleAuditLogData.Target.Id);
                 if (user.RoleIds.Any(e => e == rWaitCyber101.Id))
                 {
-                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
                     MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
                     IRole role = Context.Guild.GetRole(mi.RoleId);
                     await user.RemoveRoleAsync(role);
@@ -512,10 +512,10 @@ namespace WatchPartyBot.Modules
             }
             foreach (var entry in exploitdev)
             {
-                IGuildUser user = entry.User as IGuildUser;
+                Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
+                IGuildUser user = await Context.Guild.GetUserAsync(memberRoleAuditLogData.Target.Id);
                 if (user.RoleIds.Any(e => e == rWaitExploitDev.Id))
                 {
-                    Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = entry.Data as Discord.Rest.MemberRoleAuditLogData;
                     MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
                     IRole role = Context.Guild.GetRole(mi.RoleId);
                     await user.RemoveRoleAsync(role);
