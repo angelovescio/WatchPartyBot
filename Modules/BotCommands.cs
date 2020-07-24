@@ -19,8 +19,17 @@ namespace WatchPartyBot.Modules
     public class BotCommands : ModuleBase
     {
         
+        /// <summary>
+        /// Change this to allow more people in the room
+        /// </summary>
         private const int MAX_ROOM_SIZE = 200;
+        /// <summary>
+        /// Change this to allow more rooms
+        /// </summary>
         private const int ROOM_COUNT = 6;
+        /// <summary>
+        /// Change this to account for the new room names
+        /// </summary>
         private readonly string[] Rooms = 
             new string[ROOM_COUNT] { "ExploitDev", "CTFIntro", "Cyber101", 
                 "Cyber202", "Cyber303", "Cyber404" };
