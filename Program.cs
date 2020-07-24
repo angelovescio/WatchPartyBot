@@ -35,9 +35,6 @@ namespace WatchPartyBot
         private DiscordSocketClient _client;
 
         //RoleId List
-        public static HashSet<string> RoleIDs = new HashSet<string>() { "CTFIntro","Cyber101","ExploitDev"};
-        public static HashSet<string> WaitlistRoleIDs = new HashSet<string>() { "WaitCTFIntro", "WaitCyber101", "WaitExploitDev" };
-        public static HashSet<string> ChannelIDs = new HashSet<string>() { "CTFIntro", "Cyber101", "ExploitDev" };
         static void Main(string[] args)
         {
             new Program().MainAsync().GetAwaiter().GetResult();
@@ -78,27 +75,7 @@ namespace WatchPartyBot
                 await Task.Delay(-1);
             }
         }
-        private void GetChannelsPopulateList()
-        {
-            var guilds = _client.Guilds.Where(e => e.Name.Contains("vesh"));
-            var guild = guilds.FirstOrDefault();
-            var roles = guild.Roles;
-            var chans = guild.Channels;
-            IGuildChannel cExploitDev = chans.Where(e => e.Name.Contains("ExploitDev",
-               StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            IGuildChannel cCTFIntro = chans.Where(e => e.Name.Contains("CTFIntro",
-                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            IGuildChannel cCyber101 = chans.Where(e => e.Name.Contains("Cyber101",
-                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            IRole rExploitDev = roles.Where(e => e.Name.Contains("ExploitDev",
-               StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            IRole rCTFIntro = roles.Where(e => e.Name.Contains("CTFIntro",
-                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-            IRole rCyber101 = roles.Where(e => e.Name.Contains("Cyber101",
-                StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
-            
-        }
+        
         private Task LogAsync(LogMessage log)
         {
             Console.WriteLine(log.ToString());
@@ -108,7 +85,6 @@ namespace WatchPartyBot
         private Task ReadyAsync()
         {
             Console.WriteLine($"Connected as -> [{_client.CurrentUser}] :)");
-            GetChannelsPopulateList();            
             return Task.CompletedTask;
         }
 
