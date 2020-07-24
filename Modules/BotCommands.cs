@@ -48,6 +48,33 @@ namespace WatchPartyBot.Modules
         }
 
         [Summary("Go to the waiting room for a specific talk")]
+        [Command("help", RunMode = RunMode.Async)]
+        [Alias("?", "what", "how")]
+        public async Task GetHelpCommand()
+        {
+            IGuildUser user = Context.User as IGuildUser;
+            //IEnumerable<IRole> roles = await Context.Guild..GetRolesAsync();
+            if(user.GuildPermissions.ManageGuild)
+            {
+                await user.SendMessageAsync(";help - This menu\r\n" +
+                    ";setup - Create the rooms and roles\r\n" +
+                    ";dispose - Burn the rooms and roles to the ground\r\n" +
+                    ";openroom - Open the talks and put people in there\r\n" +
+                    ";waitlist - Add yourself to the line to see the talk, you only can be in ONE line");
+            }
+            else
+            {
+                await user.SendMessageAsync(";help - This menu\r\n" +
+                    ";setup - Create the rooms and roles\r\n" +
+                    ";waitlist - Add yourself to the line to see the talk, you only can be in ONE line. " +
+                    "Once you see a talk, you cannot see it again, but you can change your mind and get in " +
+                    "another talk's line without penalty as long as you aren't trying to change to a talk " +
+                    "you have already seen.");
+            }
+            
+        }
+        
+        [Summary("Go to the waiting room for a specific talk")]
         [Command("waitlist", RunMode = RunMode.Async)]
         [Alias("linecon", "queue")]
         public async Task GoToWaitingRoomCommand(
