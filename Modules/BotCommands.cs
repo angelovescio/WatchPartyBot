@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace WatchPartyBot.Modules
 {
@@ -18,7 +19,10 @@ namespace WatchPartyBot.Modules
     // for commands to be available, and have the Context passed to them, we must inherit ModuleBase
     public class BotCommands : ModuleBase
     {
-        
+        /// <summary>
+        /// Timer for sending messages
+        /// </summary>
+        private static System.Threading.Timer Timer;  
         /// <summary>
         /// Change this to allow more people in the room
         /// </summary>
@@ -27,12 +31,32 @@ namespace WatchPartyBot.Modules
         /// Change this to allow more rooms
         /// </summary>
         private const int ROOM_COUNT = 6;
+
+        /// <summary>
+        /// Interval for timer in minutes*seconds*millisecs
+        /// </summary>
+        private const int TIMER_INTERVAL = 1 * 60 * 1000;
+
+        /// <summary>
+        /// Link to the RTV discord for the return trip
+        /// </summary>
+        private const string RTV_DISCORD_LINK = "https://discord.gg/room";
+        
         /// <summary>
         /// Change this to account for the new room names
         /// </summary>
-        private readonly string[] Rooms = 
-            new string[ROOM_COUNT] { "ExploitDev", "CTFIntro", "Cyber101", 
+        private readonly string[] Rooms =
+            new string[ROOM_COUNT] { "ExploitDev", "CTFIntro", "Cyber101",
                 "Cyber202", "Cyber303", "Cyber404" };
+        private readonly string[] URLs =
+            new string[ROOM_COUNT] { 
+                "ExploitDev: 5 minute warning, please move to <link> when session complete",
+                "CTFIntro: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
+                "Cyber101: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
+                "Cyber202: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
+                "Cyber303: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
+                "Cyber404: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete"
+            };
         private readonly string[] WaitRooms;
         private readonly string[] MOTBRooms;
 
@@ -44,6 +68,30 @@ namespace WatchPartyBot.Modules
             {
                 WaitRooms[i] = "Wait" + Rooms[i];
                 MOTBRooms[i] = "MOTB" + Rooms[i];
+            }
+            //SetTimer();
+        }
+
+        private void SetTimer()
+        {
+            //Timer = new System.Timers.Timer(30 * 60 * 1000);
+            Timer = new System.Threading.Timer(OnTimedEvent,null,TIMER_INTERVAL, TIMER_INTERVAL);
+            
+        }
+
+        private void OnTimedEvent(object state)
+        {
+
+            ShotsFired();
+        }
+
+        private async void ShotsFired()
+        {
+            var chans = await Context.Guild.GetTextChannelsAsync();
+            for (int i = 0; i < ROOM_COUNT; i++)
+            {
+                IMessageChannel room = chans.Where(e => e.Name.Equals(Rooms[i], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                await room.SendMessageAsync(URLs[i]);
             }
         }
 
@@ -120,6 +168,7 @@ namespace WatchPartyBot.Modules
         [Alias("boot", "end")]
         public async Task EndSessionTalkCommand()
         {
+            Timer.Dispose();
             //get users with the right roles
             var users = await Context.Guild.GetUsersAsync();
             var chans = await Context.Guild.GetChannelsAsync();
@@ -318,6 +367,7 @@ namespace WatchPartyBot.Modules
             [Summary("Room to open")]
             IRole userRole = null)
         {
+            SetTimer();
             IEnumerable<IAuditLogEntry> logs = await Context.Guild.GetAuditLogsAsync(limit: 10000);
             List<IAuditLogEntry>[] logArray = new List<IAuditLogEntry>[Rooms.Length];
             var users = Context.Guild.GetUsersAsync();
