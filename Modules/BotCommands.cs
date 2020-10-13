@@ -22,7 +22,7 @@ namespace WatchPartyBot.Modules
         /// <summary>
         /// Timer for sending messages
         /// </summary>
-        private static System.Threading.Timer Timer;  
+        private static System.Threading.Timer Timer;
         /// <summary>
         /// Change this to allow more people in the room
         /// </summary>
@@ -30,32 +30,31 @@ namespace WatchPartyBot.Modules
         /// <summary>
         /// Change this to allow more rooms
         /// </summary>
-        private const int ROOM_COUNT = 6;
+        private const int ROOM_COUNT = 5;
 
         /// <summary>
         /// Interval for timer in minutes*seconds*millisecs
         /// </summary>
-        private const int TIMER_INTERVAL = 1 * 60 * 1000;
+        private const int TIMER_INTERVAL = 30 * 60 * 1000;
 
         /// <summary>
         /// Link to the RTV discord for the return trip
         /// </summary>
-        private const string RTV_DISCORD_LINK = "https://discord.gg/room";
-        
+        private const string RTV_DISCORD_LINK = "https://discord.gg/redteamvillage";
+
         /// <summary>
         /// Change this to account for the new room names
         /// </summary>
         private readonly string[] Rooms =
-            new string[ROOM_COUNT] { "ExploitDev", "CTFIntro", "Cyber101",
-                "Cyber202", "Cyber303", "Cyber404" };
+            new string[ROOM_COUNT] { "s1-intro-to-red-team", "s2-webapp-hacking", "s3-exploit-development",
+                "s4-adversarial-simulations", "s5-evilcorp" };
         private readonly string[] URLs =
-            new string[ROOM_COUNT] { 
-                "ExploitDev: 5 minute warning, please move to <link> when session complete",
-                "CTFIntro: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
-                "Cyber101: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
-                "Cyber202: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
-                "Cyber303: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete",
-                "Cyber404: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session complete"
+            new string[ROOM_COUNT] {
+                "s1: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session completes",
+                "s2: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session completes",
+                "s3: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session completes",
+                "s4: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session completes",
+                "s5: 5 minute warning, please move to "+RTV_DISCORD_LINK+" when session completes"
             };
         private readonly string[] WaitRooms;
         private readonly string[] MOTBRooms;
@@ -64,7 +63,7 @@ namespace WatchPartyBot.Modules
         {
             WaitRooms = new string[ROOM_COUNT];
             MOTBRooms = new string[ROOM_COUNT];
-            for(int i=0;i<ROOM_COUNT;i++)
+            for (int i = 0; i < ROOM_COUNT; i++)
             {
                 WaitRooms[i] = "Wait" + Rooms[i];
                 MOTBRooms[i] = "MOTB" + Rooms[i];
@@ -75,8 +74,8 @@ namespace WatchPartyBot.Modules
         private void SetTimer()
         {
             //Timer = new System.Timers.Timer(30 * 60 * 1000);
-            Timer = new System.Threading.Timer(OnTimedEvent,null,TIMER_INTERVAL, TIMER_INTERVAL);
-            
+            Timer = new System.Threading.Timer(OnTimedEvent, null, TIMER_INTERVAL, TIMER_INTERVAL);
+
         }
 
         private void OnTimedEvent(object state)
@@ -102,34 +101,39 @@ namespace WatchPartyBot.Modules
         {
             IGuildUser user = Context.User as IGuildUser;
             //IEnumerable<IRole> roles = await Context.Guild..GetRolesAsync();
-            if(user.GuildPermissions.ManageGuild)
+            if (user.GuildPermissions.ManageGuild)
             {
                 await user.SendMessageAsync(";help - This menu\r\n" +
                     ";setup - Create the rooms and roles\r\n" +
                     ";dispose - Burn the rooms and roles to the ground\r\n" +
                     ";openroom - Open the talks and put people in there\r\n" +
-                    ";waitlist - Add yourself to the line to see the talk, you only can be in ONE line");
+                    ";waitlist - Add yourself to the line to see the talk, you only can be in ONE line \r\n" +
+                    " (s1-intro-to-red-team, s2-webapp-hacking, s3-exploit-development," +
+                    " s4-adversarial-simulations, or s5-evilcorp) \r\n");
             }
             else
             {
                 await user.SendMessageAsync(";help - This menu\r\n" +
-                    ";setup - Create the rooms and roles\r\n" +
                     ";waitlist - Add yourself to the line to see the talk, you only can be in ONE line. " +
+                    " (s1-intro-to-red-team, s2-webapp-hacking, s3-exploit-development," +
+                    " s4-adversarial-simulations, or s5-evilcorp) \r\n" +
                     "Once you see a talk, you cannot see it again, but you can change your mind and get in " +
                     "another talk's line without penalty as long as you aren't trying to change to a talk " +
                     "you have already seen.");
             }
-            
+
         }
-        
+
         [Summary("Go to the waiting room for a specific talk")]
         [Command("waitlist", RunMode = RunMode.Async)]
         [Alias("linecon", "queue")]
         public async Task GoToWaitingRoomCommand(
-            [Summary("Room to wait in [ExploitDev, " +
-            "CTFIntro, Cyber101, Cyber202, " +
-            "Cyber303, Cyber404]")]
-            string userRoom = "ExploitDev")
+            [Summary("Room to wait in [s1-intro-to-red-team, " +
+            "s2-webapp-hacking, " +
+            "s3-exploit-development, " +
+            "s4-adversarial-simulations, " +
+            "s5-evilcorp]")]
+            string userRoom = "s1-intro-to-red-team")
         {
             //get ID for current user
             var userId = Context.User.Id;
@@ -139,15 +143,15 @@ namespace WatchPartyBot.Modules
             for (int i = 0; i < ROOM_COUNT; i++)
             {
                 //Remove the other waiting rooms
-                var roles = Context.Guild.Roles.Where(r => r.Name.Equals("Wait"+Rooms[i],StringComparison.InvariantCultureIgnoreCase));
+                var roles = Context.Guild.Roles.Where(r => r.Name.Equals("Wait" + Rooms[i], StringComparison.InvariantCultureIgnoreCase));
                 await user.RemoveRolesAsync(roles);
                 //check if role requested is one of the ones allowed
                 if (roles.Any(e => e.Name.Contains(userRoom, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    IRole rId = roles.FirstOrDefault(f => f.Name.Equals("Wait"+userRoom, StringComparison.InvariantCultureIgnoreCase));
+                    IRole rId = roles.FirstOrDefault(f => f.Name.Equals("Wait" + userRoom, StringComparison.InvariantCultureIgnoreCase));
                     IRole rTryMOTBRoom = Context.Guild.Roles.Where(e => e.Name.Equals("MOTB" + Rooms[i],
                                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                    if (rId != null && !user.RoleIds.Any(f=>f == rTryMOTBRoom.Id))
+                    if (rId != null && !user.RoleIds.Any(f => f == rTryMOTBRoom.Id))
                     {
                         await user.AddRoleAsync(rId);
                     }
@@ -158,7 +162,69 @@ namespace WatchPartyBot.Modules
                 }
             }
         }
-        
+        /// <summary>
+        /// Run the ads immediately
+        /// </summary>
+        /// <returns></returns>
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Send out the adverts manually")]
+        [Command("ads", RunMode = RunMode.Async)]
+        [Alias("advert", "sponsors")]
+        public async Task ManualAdverts()
+        {
+
+        }
+
+        /// <summary>
+        /// Run the ads on a timer
+        /// </summary>
+        /// <param name="minutesBetweenAds">minutes between ads</param>
+        /// <returns></returns>
+        [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
+        [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
+        [RequireOwner(Group = "Permission")]
+        [Summary("Send out the adverts automagically on a timer at X interval")]
+        [Command("ads", RunMode = RunMode.Async)]
+        [Alias("advert", "sponsors")]
+        public async Task AutoAdverts(
+            [Summary("Room to open")]
+            int minutesBetweenAds = 30)
+        {
+
+        }
+        public async Task InitializeRoles(IGuildChannel cRoom, string roomName)
+        {
+            var defaultrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "@everyone");
+            var defaultperms = new OverwritePermissions(
+                sendMessages: PermValue.Deny,
+                addReactions: PermValue.Deny,
+                viewChannel: PermValue.Deny
+            );
+            var botrole = Context.Guild.Roles.FirstOrDefault(r => r.Name == "RodsFromGod");
+            var botperms = new OverwritePermissions(
+                sendMessages: PermValue.Allow,
+                addReactions: PermValue.Allow,
+                viewChannel: PermValue.Allow,
+                manageChannel: PermValue.Allow
+            );
+            await Context.Guild.CreateRoleAsync(name: roomName, color: Color.Teal,
+                        isMentionable: false);
+            var role2 = Context.Guild.Roles.FirstOrDefault(r => r.Name == roomName);
+            var perms = new OverwritePermissions(
+                sendMessages: PermValue.Allow,
+                addReactions: PermValue.Allow,
+                viewChannel: PermValue.Allow
+            );
+            await cRoom.AddPermissionOverwriteAsync(botrole, botperms).ContinueWith(
+                task => cRoom.AddPermissionOverwriteAsync(defaultrole, defaultperms).ContinueWith(
+                   task => cRoom.AddPermissionOverwriteAsync(role2, perms)
+                   )
+            );
+        }
         [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
         [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
         [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
@@ -185,53 +251,27 @@ namespace WatchPartyBot.Modules
                 viewChannel: PermValue.Allow,
                 manageChannel: PermValue.Allow
             );
-
             for (int i = 0; i < ROOM_COUNT; i++)
             {
-                var room = chans.Where(e => e.Name.Equals(Rooms[i],StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                var role = Context.Guild.Roles.Where(r => r.Name
-                .Equals(Rooms[i],StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                foreach (var user in users)
+                IEnumerable<IRole> rTryRole = Context.Guild.Roles.Where(e => e.Name.Equals(Rooms[i],
+                    StringComparison.InvariantCultureIgnoreCase));
+                IGuildChannel cRoom = chans.Where(e => e.Name.Equals(Rooms[i],
+                   StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                if (rTryRole != null)
                 {
-                    await user.RemoveRoleAsync(role);
-                }
-                await room.DeleteAsync();
-            }
-            //Strip their roles
-
-            for (int j = 0; j < ROOM_COUNT; j++)
-            {
-                IGuildChannel cRoom = chans.Where(e => e.Name.Contains(Rooms[j],
-               StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
-                if (cRoom == null)
-                {
-                    //create the channels
-                    ITextChannel tRoom = await Context.Guild.CreateTextChannelAsync(Rooms[j]);
-                    if (tRoom != null)
+                    foreach (var role in rTryRole)
                     {
-                        var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == Rooms[j]);
-                        var perms = new OverwritePermissions(
-                            sendMessages: PermValue.Allow,
-                            addReactions: PermValue.Allow,
-                            viewChannel: PermValue.Allow
-                        );
-                        await tRoom.AddPermissionOverwriteAsync(botrole, botperms);
-                        await tRoom.AddPermissionOverwriteAsync(defaultrole, defaultperms);
-                        await tRoom.AddPermissionOverwriteAsync(role, perms);
-                        //Program.ChannelIDs.Add(tExploitDev);
+                        await role.DeleteAsync().ContinueWith(task => InitializeRoles(cRoom, Rooms[i]));
                     }
                 }
             }
-            //await SetupRolesRoomsCommand();
-            //Clear the room
         }
         //set up the roles
         [RequireUserPermission(GuildPermission.ManageRoles, Group = "Permission")]
         [RequireUserPermission(GuildPermission.ManageChannels, Group = "Permission")]
         [RequireUserPermission(GuildPermission.KickMembers, Group = "Permission")]
         [RequireOwner(Group = "Permission")]
-        [Summary("Set up initial roles and rooms wait in [ExploitDev, CTFIntro, Cyber101]")]
+        [Summary("Set up initial roles and rooms wait in")]
         [Command("setuproom", RunMode = RunMode.Async)]
         [Alias("initialize", "setup")]
         public async Task SetupRolesRoomsCommand()
@@ -267,7 +307,7 @@ namespace WatchPartyBot.Modules
                             StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                         if (rTryRoom == null)
                         {
-                            IRole rRoom = await Context.Guild.CreateRoleAsync(name: Rooms[i], color: Color.Teal, 
+                            IRole rRoom = await Context.Guild.CreateRoleAsync(name: Rooms[i], color: Color.Teal,
                                 isMentionable: false);
 
                         }
@@ -277,11 +317,36 @@ namespace WatchPartyBot.Modules
                             addReactions: PermValue.Allow,
                             viewChannel: PermValue.Allow
                         );
-                        await tRoom.AddPermissionOverwriteAsync(botrole, botperms);
-                        await tRoom.AddPermissionOverwriteAsync(defaultrole, defaultperms);
-                        await tRoom.AddPermissionOverwriteAsync(role, perms);
+                        await tRoom.AddPermissionOverwriteAsync(botrole, botperms).ContinueWith(
+                            task => tRoom.AddPermissionOverwriteAsync(defaultrole, defaultperms).ContinueWith(
+                               task => tRoom.AddPermissionOverwriteAsync(role, perms)
+                               )
+                            );
                         //Program.ChannelIDs.Add(tExploitDev);
                     }
+                }
+                else
+                {
+                    //create the roles
+                    IRole rTryRoom = Context.Guild.Roles.Where(e => e.Name.Equals(Rooms[i],
+                        StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    if (rTryRoom == null)
+                    {
+                        IRole rRoom = await Context.Guild.CreateRoleAsync(name: Rooms[i], color: Color.Teal,
+                            isMentionable: false);
+
+                    }
+                    var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == Rooms[i]);
+                    var perms = new OverwritePermissions(
+                        sendMessages: PermValue.Allow,
+                        addReactions: PermValue.Allow,
+                        viewChannel: PermValue.Allow
+                    );
+                    await cRoom.AddPermissionOverwriteAsync(botrole, botperms).ContinueWith(
+                        task => cRoom.AddPermissionOverwriteAsync(defaultrole, defaultperms).ContinueWith(
+                           task => cRoom.AddPermissionOverwriteAsync(role, perms)
+                           )
+                        );
                 }
             }
             for (int j = 0; j < WaitRooms.Length; j++)
@@ -290,7 +355,7 @@ namespace WatchPartyBot.Modules
                     StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 if (rTryWaitRoom == null)
                 {
-                    IRole rWaitRoom = await Context.Guild.CreateRoleAsync(name: WaitRooms[j], 
+                    IRole rWaitRoom = await Context.Guild.CreateRoleAsync(name: WaitRooms[j],
                         color: Color.Teal, isMentionable: false);
                 }
             }
@@ -300,7 +365,7 @@ namespace WatchPartyBot.Modules
                     StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                 if (rTryMOTBRoom == null)
                 {
-                    IRole rMOTBRoom = await Context.Guild.CreateRoleAsync(name: MOTBRooms[k], 
+                    IRole rMOTBRoom = await Context.Guild.CreateRoleAsync(name: MOTBRooms[k],
                         color: Color.Teal, isMentionable: false);
 
                 }
@@ -333,8 +398,8 @@ namespace WatchPartyBot.Modules
             var chans = await Context.Guild.GetChannelsAsync();
             for (int k = 0; k < Rooms.Length; k++)
             {
-                IEnumerable <IGuildChannel> cRooms = chans.Where(e => e.Name.Contains(Rooms[k],
-               StringComparison.InvariantCultureIgnoreCase));
+                IEnumerable<IGuildChannel> cRooms = chans.Where(e => e.Name.Contains(Rooms[k],
+              StringComparison.InvariantCultureIgnoreCase));
                 if (cRooms != null)
                 {
                     foreach (var room in cRooms)
@@ -374,16 +439,22 @@ namespace WatchPartyBot.Modules
             for (int i = 0; i < Rooms.Length; i++)
             {
                 logArray[i] = new List<IAuditLogEntry>(MAX_ROOM_SIZE);
+                int j = MAX_ROOM_SIZE;
                 foreach (var log in logs)
                 {
+                    if (j > 200)
+                    {
+                        break;
+                    }
                     if (log.CreatedAt.DateTime < DateTime.Now.Subtract(new TimeSpan(1, 0, 0, 0)))
                     {
+                        j++;
                         break;
                     }
                     if (log.Action == ActionType.MemberRoleUpdated)
                     {
                         IAuditLogData data = log.Data;
-                        Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData = 
+                        Discord.Rest.MemberRoleAuditLogData memberRoleAuditLogData =
                             log.Data as Discord.Rest.MemberRoleAuditLogData;
                         IGuildUser user = await Context.Guild.GetUserAsync(memberRoleAuditLogData.Target.Id);
                         var member_audit = memberRoleAuditLogData.Roles.Where(e => e.Name.Equals("Wait" + Rooms[i], StringComparison.InvariantCultureIgnoreCase));
@@ -393,6 +464,7 @@ namespace WatchPartyBot.Modules
                             if (user.RoleIds.Any(e => e == member_audit.FirstOrDefault().RoleId))
                             {
                                 logArray[i].Add(log);
+                                j++;
                             }
                         }
                     }
@@ -413,9 +485,9 @@ namespace WatchPartyBot.Modules
                         IGuildUser user = await Context.Guild.GetUserAsync(memberRoleAuditLogData.Target.Id);
                         for (int j = 0; j < ROOM_COUNT; j++)
                         {
-                            IRole rTryWaitRoom = Context.Guild.Roles.Where(e => e.Name.Equals("Wait"+Rooms[j],
+                            IRole rTryWaitRoom = Context.Guild.Roles.Where(e => e.Name.Equals("Wait" + Rooms[j],
                                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                            IRole rTryMOTBRoom = Context.Guild.Roles.Where(e => e.Name.Equals("MOTB"+Rooms[j],
+                            IRole rTryMOTBRoom = Context.Guild.Roles.Where(e => e.Name.Equals("MOTB" + Rooms[j],
                                 StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
                             if (rTryWaitRoom != null && rTryMOTBRoom != null)
                             {
@@ -423,9 +495,9 @@ namespace WatchPartyBot.Modules
                                 {
                                     //MemberRoleEditInfo mi = memberRoleAuditLogData.Roles.FirstOrDefault();
                                     //IRole role = Context.Guild.GetRole(mi.RoleId);
-                                    await user.RemoveRoleAsync(rTryWaitRoom);
-                                    await user.AddRoleAsync(rTryRoom);
-                                    await user.AddRoleAsync(rTryMOTBRoom);
+                                    await user.RemoveRoleAsync(rTryWaitRoom).ContinueWith(
+                                        task => user.AddRoleAsync(rTryRoom).ContinueWith(
+                                            task => user.AddRoleAsync(rTryMOTBRoom)));
                                     break;
 
                                 }
